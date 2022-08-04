@@ -15,12 +15,10 @@ app.get('/', (_request, response) => {
 
 app.get('/talker', (req, res) => {
  const talkerList = fs.readFileSync('./talker.json', 'utf8');
- const parsed = JSON.parse(talkerList)
+ const parsed = JSON.parse(talkerList);
  res.status(200).json(parsed);
-})
+});
 
 app.listen(PORT, () => {
   console.log('Online');
 });
-
-//para commitar//
