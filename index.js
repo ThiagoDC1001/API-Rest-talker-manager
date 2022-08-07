@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const tokenGenerator = require('generate-token');
 const reading = require('./helpers/readFile');
 // const writing = require('./helpers/writeFile');
 
@@ -27,7 +28,13 @@ app.get('/talker/:id', async (req, res) => {
   if (!index) {
     res.status(404).send({ message: 'Pessoa palestrante não encontrada' });
   }
-  res.json(index);
+  res.status(200).send(index);
+});
+
+app.post('/login', (req, res) => {
+  const token = tokenGenerator.generate(16);  
+  // const tokenPadrao = { token: '`${token}`' };
+  res.status(200).send({ token });
 });
 
 app.listen(PORT, () => {
