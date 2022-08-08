@@ -2,7 +2,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const tokenGenerator = require('generate-token');
 const reading = require('./helpers/readFile');
-// const writing = require('./helpers/writeFile');
+const middleware = require('./middleware');
+const writing = require('./helpers/writeFile');
 
 const app = express();
 app.use(bodyParser.json());
@@ -29,8 +30,7 @@ app.get('/', (_request, response) => {
 });
 
 app.get('/talker', async (req, res) => { 
-  const talkerList = await reading('talker.json');
-  // const parsed = JSON.parse(talkerList);  
+  const talkerList = await reading('talker.json');  
   res.status(200).send(talkerList);
 });
 
@@ -45,14 +45,28 @@ app.get('/talker/:id', async (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  const token = tokenGenerator.generate(16);    
+  const { email, password } = req.body;      
   const validate = validacaoDados(email, password);
+  const token = tokenGenerator.generate(16);
   if (validate.status) {
     return res.status(validate.status).send({ message: validate.message });
   }
   return res.status(200).send({ token });
 });
+
+app.post(
+  '/talker', 
+  middleware.validateToken, 
+  middleware.validateName, 
+  middleware.validateAge,
+  middleware.validateTalk,
+  middleware.validateWatchedAt,
+  middleware.validateRate,
+  async (req, res) => {       
+    const resposta = await writing('talker.json', req.body);    
+    res.status(201).json(resposta);
+},
+);
 
 app.listen(PORT, () => {
   console.log('Online');
