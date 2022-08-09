@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const tokenGenerator = require('generate-token');
+const fs = require('fs').promises;
 const reading = require('./helpers/readFile');
 const middleware = require('./middleware');
 const writing = require('./helpers/writeFile');
@@ -24,6 +25,10 @@ const validacaoDados = (email, password) => {
   return '';
 };
 
+const leArquivo = async () => {
+  const talkerList = await reading('talker.json');
+  return talkerList;
+};
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
@@ -35,7 +40,7 @@ app.get('/talker', async (req, res) => {
 });
 
 app.get('/talker/:id', async (req, res) => {  
-  const talkerList = await reading('talker.json');
+  const talkerList = await leArquivo();
   const id = Number(req.params.id);
   const index = talkerList.find((item) => item.id === id);
   if (!index) {
@@ -47,7 +52,7 @@ app.get('/talker/:id', async (req, res) => {
 app.post('/login', (req, res) => {
   const { email, password } = req.body;      
   const validate = validacaoDados(email, password);
-  const token = tokenGenerator.generate(16);
+  const token = tokenGenerator.generate(16);    
   if (validate.status) {
     return res.status(validate.status).send({ message: validate.message });
   }
@@ -67,6 +72,26 @@ app.post(
     res.status(201).json(resposta);
 },
 );
+
+app.put(
+  '/talker/:id',
+  middleware.validateToken, 
+  middleware.validateName, 
+  middleware.validateAge,
+  middleware.validateTalk,
+  middleware.validateWatchedAt,
+  middleware.validateRate,  
+  async (req, res) => {
+    const talkerList = await leArquivo();
+    const id = Number(req.params.id);
+    const index = talkerList.filter((item) => item.id !== id);
+    const pessoa = req.body;
+    pessoa.id = id;
+    index.push(pessoa);    
+    await fs.writeFile('talker.json', JSON.stringify(index));
+    res.status(200).send(pessoa);
+    },  
+  ); 
 
 app.listen(PORT, () => {
   console.log('Online');
