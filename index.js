@@ -35,7 +35,7 @@ app.get('/', (_request, response) => {
 });
 
 app.get('/talker', async (req, res) => { 
-  const talkerList = await reading('talker.json');  
+  const talkerList = await leArquivo(); 
   res.status(200).send(talkerList);
 });
 
@@ -92,6 +92,20 @@ app.put(
     res.status(200).send(pessoa);
     },  
   ); 
+
+app.delete(
+    '/talker/:id', 
+    middleware.validateToken,
+    async (req, res) => {
+      const talkerList = await leArquivo();
+      const id = Number(req.params.id);
+      const index = talkerList.findIndex((item) => item.id === id);
+      talkerList.splice(index, id);
+      console.log(talkerList);
+      await fs.writeFile('talker.json', JSON.stringify(talkerList));
+      res.sendStatus(204);
+    },
+);
 
 app.listen(PORT, () => {
   console.log('Online');
